@@ -21,7 +21,7 @@ function verifySignature(req, res, next) {
   next();
 }
 
-router.post("/", verifySignature, async (req, res) => {
+router.post("/", async (req, res) => {
   const event = req.headers["x-github-event"];
   const payload = req.body;
 
