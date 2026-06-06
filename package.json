@@ -3,12 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  
   "scripts": {
-   "start": "node src/index.js",
-   "dev": "nodemon src/index.js"
- }, 
-  
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/saros-dev/github-telegram-notify.git"
