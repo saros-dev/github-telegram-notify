@@ -17,20 +17,33 @@ function parseGithubEvent(event, payload = {}) {
 }
 
 function formatPush(repo, payload) {
-  const commits = payload.commits || [];
   const branch = payload.ref?.replace("refs/heads/", "") || "unknown";
+  const commits = payload.commits || [];
   const author = payload.pusher?.name || "unknown";
   const repoUrl = payload.repository?.html_url || "";
 
-  let msg =
-    `🚀 *New Push*\n\n` +
-    `📦 *Repository:* ${repo}\n` +
-    `🌿 *Branch:* ${branch}\n` +
-    `👤 *Author:* ${author}\n` +
-    `📝 *Commits:* ${commits.length}\n\n`;
+  // 🗑 Branch delete
+  if (payload.deleted) {
+    return (
+      `🗑 *Branch Deleted*\n\n` +
+      `📦 Repo: ${repo}\n` +
+      `🌿 Branch: ${branch}\n` +
+      `👤 By: ${author}`
+    );
+  }
 
-  commits.slice(0, 5).forEach((commit) => {
-    msg += `• ${commit.message}\n`;
+  // 🚀 Force push
+  const isForce = payload.forced ? "⚠️ (Force Push)\n\n" : "\n\n";
+
+  let msg =
+    `🚀 *New Push* ${isForce}` +
+    `📦 Repo: ${repo}\n` +
+    `🌿 Branch: ${branch}\n` +
+    `👤 Author: ${author}\n` +
+    `📝 Commits: ${commits.length}\n\n`;
+
+  commits.slice(0, 5).forEach((c) => {
+    msg += `• ${c.message || "no message"}\n`;
   });
 
   if (repoUrl) {
@@ -42,26 +55,37 @@ function formatPush(repo, payload) {
 
 function formatPR(repo, payload) {
   const pr = payload.pull_request || {};
+  const action = payload.action;
+
+  const title = pr.title || "No title";
+  const user = pr.user?.login || "unknown";
+  const url = pr.html_url || "";
+
+  let status = "🔀 PR Event";
+
+  if (action === "opened") status = "🆕 PR Opened";
+  else if (action === "closed" && pr.merged) status = "🎉 PR Merged";
+  else if (action === "closed") status = "❌ PR Closed";
 
   return (
-    `🔀 *Pull Request*\n\n` +
-    `📦 *Repository:* ${repo}\n` +
-    `📌 *Title:* ${pr.title || "No title"}\n` +
-    `📊 *State:* ${pr.state || "unknown"}\n` +
-    `👤 *Author:* ${pr.user?.login || "unknown"}\n` +
-    `🔗 ${pr.html_url || ""}`
+    `${status}\n\n` +
+    `📦 Repo: ${repo}\n` +
+    `📌 Title: ${title}\n` +
+    `👤 Author: ${user}\n` +
+    `📊 Action: ${action}\n` +
+    `🔗 ${url}`
   );
 }
 
 function formatRelease(repo, payload) {
-  const release = payload.release || {};
+  const r = payload.release || {};
 
   return (
     `🚀 *New Release*\n\n` +
-    `📦 *Repository:* ${repo}\n` +
-    `🏷 *Tag:* ${release.tag_name || "unknown"}\n` +
-    `📄 *Name:* ${release.name || "No name"}\n` +
-    `🔗 ${release.html_url || ""}`
+    `📦 Repo: ${repo}\n` +
+    `🏷 Tag: ${r.tag_name || "unknown"}\n` +
+    `📄 Name: ${r.name || "No name"}\n` +
+    `🔗 ${r.html_url || ""}`
   );
 }
 
